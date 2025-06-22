@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>滚轮控制视频进度演示</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Chettan+2:wght@400..800&family=Monsieur+La+Doulaise&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Imperial+Script&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #000;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      cursor: url('brass-cursor.png'), auto;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100vw;
+    }
+    .video-container {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1;
+    }
+    video {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      margin: 0;
+      background: #000;
+      border-radius: 0;
+      box-shadow: none;
+      object-fit: cover;
+    }
+    .time-indicator {
+      display: none;
+    }
+    @keyframes breathe {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+    #startBtn {
+      animation: breathe 1.8s infinite;
+      transition: opacity 0.3s;
+    }
+    .enter-tip {
+      position: absolute;
+      left: 50%;
+      bottom: 150px;
+      transform: translateX(-50%);
+      color: #fff2d5;
+      font-size: 1.1rem;
+      font-family: 'Baloo Chettan 2', sans-serif;
+      letter-spacing: 0.12em;
+      opacity: 0.85;
+      pointer-events: none;
+      user-select: none;
+      z-index: 10;
+      text-shadow: 0 2px 8px #000;
+    }
+    button, a, [role="button"] {
+      cursor: url('brass-cursor-pointer.png'), pointer;
+    }
+    .dialogue-box {
+      position: fixed;
+      left: 50%;
+      bottom: 40px;
+      transform: translateX(-50%);
+      width: calc(100vw - 64px);
+      min-width: 340px;
+      max-width: 100vw;
+      background: #222 url('https://www.transparenttextures.com/patterns/square-bg.png');
+      border: 4px solid #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px #000b, 0 0 0 4px #000;
+      padding: 40px 32px 40px 110px;
+      font-family: 'Press Start 2P', 'Consolas', 'monospace';
+      font-size: 1.1rem;
+      color: #fff2d5;
+      z-index: 20;
+      display: flex;
+      align-items: flex-start;
+      animation: dialogueIn 0.5s cubic-bezier(.7,1.7,.5,1) 1;
+      letter-spacing: 0.04em;
+      overflow: visible;
+      box-sizing: border-box;
+    }
+    .avatar {
+      position: absolute;
+      left: 32px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 8px;
+      background: #111;
+      image-rendering: pixelated;
+      box-shadow: 0 2px 8px #000b;
+    }
+    .dialogue-text {
+      min-height: 1.5em;
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-family: 'Pixelify Sans', sans-serif;
+      font-optical-sizing: auto;
+      font-weight: 400;
+      font-style: normal;
+      font-size: 1.1rem;
+      color: #fff2d5;
+      text-shadow: 0 2px 8px #000b;
+      letter-spacing: 0.04em;
+      margin-left: 0;
+      margin-top: 0;
+      align-self: flex-start;
+    }
+    @keyframes dialogueIn {
+      0% { opacity: 0; transform: translateX(-50%) translateY(40px) scale(0.95); }
+      100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+  </style>
+  <!-- 引入 GSAP CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+  <button id="startBtn" style="position:absolute;left: 670px;bottom:60px;z-index:10;font-size:3.1rem;padding:1em 2.5em;cursor:pointer;color:#CA8758;background:none;border:none;font-family:'Gabriola', 'Gabriola Regular', serif;font-weight:400;letter-spacing:40%;">Click  to  enter</button>
+  <div class="video-container">
+    <video id="mainVideo" preload="auto" loop="false" playsinline style="width:100vw;height:100vh;object-fit:cover;visibility:hidden;">
+      <source id="mainSource" src="D:\page\0001-0330 (video-converter.com).mp4" type="video/mp4">
+      您的浏览器不支持 HTML5 视频。
+    </video>
+  </div>
+  <div class="time-indicator" id="timeIndicator">00:00</div>
+  <div class="dialogue-box" id="dialogueBox" style="display:none;">
+    <img id="avatarImg" src="https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png" class="avatar" alt="avatar">
+    <div class="dialogue-text" id="dialogueText"></div>
+  </div>
+  <audio id="dialogAudio" src="audio/door-opening2.mp3"></audio>
+  <script>
+    const mainVideo = document.getElementById('mainVideo');
+    const mainSource = document.getElementById('mainSource');
+    const startBtn = document.getElementById('startBtn');
+    const timeIndicator = document.getElementById('timeIndicator');
+    let wheelTimeout = null;
+    let targetTime = 0;
+    let animationFrameId = null;
+    let isWheeling = false;
+    let wheelEndTimeout = null;
+    // 区间定义
+    const intervals = [
+      {start: 0, end: 1.08, mode: 'auto'},
+      {start: 1.09, end: 4.22, mode: 'wheel'},
+      //{start: 4.23, end: 8.21, mode: 'auto'},
+      {start: 4.23, end: 11.04, mode: 'wheel'},
+      //{start: 15.23, end: Infinity, mode: 'auto'}
+    ];
+    let currentInterval = 0;
+    let wheelEnabled = false;
+    function getIntervalIndex(time) {
+      for(let i=0;i<intervals.length;i++){
+        if(time >= intervals[i].start && time <= intervals[i].end) return i;
+      }
+      return intervals.length-1;
+    }
+    function setIntervalMode(idx) {
+      currentInterval = idx;
+      wheelEnabled = intervals[idx].mode === 'wheel';
+      if(wheelEnabled) {
+        mainVideo.pause();
+        targetTime = mainVideo.currentTime;
+      } else {
+        if(mainVideo.paused) mainVideo.play();
+        targetTime = mainVideo.currentTime;
+      }
+    }
+    // 监听timeupdate，区间切换
+    mainVideo.addEventListener('timeupdate', function() {
+      let idx = getIntervalIndex(mainVideo.currentTime);
+      if(idx !== currentInterval) setIntervalMode(idx);
+      // 自动区间到末尾自动暂停
+      if(intervals[idx].mode === 'auto' && mainVideo.currentTime >= intervals[idx].end) {
+        if(idx < intervals.length-1) {
+          mainVideo.currentTime = intervals[idx+1].start;
+          targetTime = mainVideo.currentTime;
+          setIntervalMode(idx+1);
+        } else {
+          mainVideo.pause();
+        }
+      }
+      // 滚轮区间到末尾自动跳到下一区间
+      if(intervals[idx].mode === 'wheel' && mainVideo.currentTime >= intervals[idx].end) {
+        if(idx < intervals.length-1) {
+          mainVideo.currentTime = intervals[idx+1].start;
+          targetTime = mainVideo.currentTime;
+          setIntervalMode(idx+1);
+        } else {
+          mainVideo.pause();
+        }
+      }
+    });
+    // 滚轮控制(无缓动，直接跟随)
+    document.addEventListener('wheel', function(e) {
+      if (!mainVideo.duration || !wheelEnabled) return;
+      e.preventDefault();
+      const idx = getIntervalIndex(mainVideo.currentTime);
+      const intv = intervals[idx];
+      const pxToSec = 1 / 500; // 灵敏度
+      let deltaSec = e.deltaY * pxToSec;
+      let newTime = Math.max(intv.start, Math.min(intv.end, mainVideo.currentTime + deltaSec));
+      mainVideo.currentTime = newTime;
+      targetTime = newTime;
+      mainVideo.pause();
+    }, { passive: false });
+    // 禁用视频控件
+    mainVideo.controls = false;
+    // 页面加载时先加载第一帧
+    window.addEventListener('DOMContentLoaded', function() {
+      mainVideo.load();
+      mainVideo.currentTime = 0;
+      mainVideo.muted = true;
+      targetTime = 0;
+      mainVideo.addEventListener('loadeddata', function once() {
+        mainVideo.pause();
+        mainVideo.style.visibility = 'visible';
+        mainVideo.removeEventListener('loadeddata', once);
+      });
+    });
+    // 开始按钮逻辑
+    startBtn.addEventListener('click', function() {
+      startBtn.style.display = 'none';
+      mainVideo.muted = false;
+      mainVideo.currentTime = 0;
+      targetTime = 0;
+      setIntervalMode(0);
+      mainVideo.play();
+    });
+    // 时间格式化
+    function formatTime(sec) {
+      sec = Math.max(0, Math.floor(sec));
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    // 更新时间显示
+    function updateTimeIndicator() {
+      timeIndicator.textContent = formatTime(mainVideo.currentTime);
+    }
+
+    // 监听视频时间变化
+    mainVideo.addEventListener('timeupdate', updateTimeIndicator);
+
+    // 像素风对话框逻辑
+    const dialogueBox = document.getElementById('dialogueBox');
+    const dialogueText = document.getElementById('dialogueText');
+    const dialogueContent = 'Welocme.She has waited for you for quite a while.';
+    let dialogueShown = false;
+    let dialogueEverClosed = false;
+    function showDialogueBox() {
+      if(dialogueShown || dialogueEverClosed) return;
+      dialogueShown = true;
+      dialogueBox.style.display = 'flex';
+      dialogueText.textContent = '';
+      // 自动播放开门音效
+      const dialogAudio = document.getElementById('dialogAudio');
+      if(dialogAudio) {
+        dialogAudio.currentTime = 0;
+        dialogAudio.play();
+      }
+      let i = 0;
+      function typeWriter() {
+        if (i <= dialogueContent.length) {
+          dialogueText.textContent = dialogueContent.slice(0, i);
+          i++;
+          setTimeout(typeWriter, 38 + Math.random()*40);
+        }
+      }
+      typeWriter();
+    }
+    // 监听视频时间，1.08秒后弹出对话框
+    mainVideo.addEventListener('timeupdate', function() {
+      if (!dialogueShown && !dialogueEverClosed && mainVideo.currentTime >= 1.08) {
+        showDialogueBox();
+      }
+    });
+
+    function hideDialogueBox() {
+      dialogueBox.style.display = 'none';
+    }
+    // 点击任意位置隐藏对话框
+    document.addEventListener('mousedown', function hideDialogueOnClick() {
+      if(dialogueShown) {
+        hideDialogueBox();
+        dialogueShown = false;
+        dialogueEverClosed = true;
+        document.removeEventListener('mousedown', hideDialogueOnClick);
+      }
+    });
+
+    // 已去除缓动，无需 smoothUpdate
+  </script>
+</body>
+</html> 

@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Dream Tavern</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Chettan+2:wght@400..800&family=Monsieur+La+Doulaise&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Imperial+Script&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="logo (2).png">
+  <style>
+    @font-face {
+      font-family: 'Pixel-CN';
+      src: url('./fonts/BoutiqueBitmap.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    html, body {
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      background: #000;
+      overflow: hidden;
+      cursor: url('光标.png'), auto;
+    }
+    #container {
+      width: 100vw; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #frame {
+      width: 100vw; height: 100vh;
+      object-fit: cover;
+      display: block;
+      user-select: none;
+      pointer-events: none;
+    }
+    #startBtn {
+      position: fixed;
+      left: 50%;
+      bottom: 0px;
+      transform: translateX(-50%) translateX(-20px); /* 居中后再向左偏移 */
+      width:800px;
+      z-index: 10;
+      font-size: 3.1rem;
+      padding: 1em 2.5em;
+      cursor: pointer;
+      color: #CA8758;
+      background: none;
+      border: none;
+      font-family: 'Gabriola', 'Gabriola Regular', serif;
+      font-weight: 400;
+      letter-spacing: 40%;
+    }
+    .dialogue-box{
+      min-width: unset;
+      max-width: unset;
+      width: calc(100vw - 48px);
+      height: 160px;
+      border-radius: 16px;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      position: fixed;
+      transform: none;
+      background: none;
+      border: none;
+      box-shadow:none;
+      color: #E993FF;
+      font-size: 1.2rem;
+      font-family: 'Pixelify Sans', sans-serif;
+      letter-spacing: 0.04em;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 0;
+    }
+    
+    .dialog-bg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+  
+    .dialogue-text {
+      position: absolute;
+      left: 32px;
+      top: 50%;
+      transform: translateY(-50%);
+      min-height: unset;
+      height: auto;
+      white-space: nowrap;
+      word-break: keep-all;
+      display: flex;
+      align-items: center;
+      font-family: 'Pixelify Sans', sans-serif;
+      font-optical-sizing: auto;
+      font-weight: 400;
+      font-style: normal;
+      font-size: 1.1rem;
+      color: #fff2d5;
+      text-shadow: 0 2px 8px #000b;
+      letter-spacing: 0.04em;
+      margin-left: 0;
+      margin-top: 0;
+      align-self: flex-start;
+      z-index: 2;
+    }
+    .dialogue-title {
+      position: absolute;
+      left: 18px;
+      top: -32px;
+      margin-left: 8;
+      margin-bottom: 0;
+      font-family: 'Pixelify Sans', sans-serif;
+      font-optical-sizing: auto;
+      font-weight: 1000;
+      font-style: normal;
+      font-size: 1.6rem;
+      color: #2A1511;
+      -webkit-text-stroke: 1px #B79476;
+      text-stroke: 1px #B79476;
+      text-shadow:
+        1px 0 0 #B79476,
+        -1px 0 0 #B79476,
+        0 1px 0 #B79476,
+        0 -1px 0 #B79476,
+        1px 1px 0 #B79476,
+        -1px -1px 0 #B79476,
+        1px -1px 0 #B79476,
+        -1px 1px 0 #B79476;
+      line-height: 1.2;
+      z-index: 3;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    @keyframes dialogueIn {
+      0% { opacity: 0; transform: translateX(-50%) translateY(40px) scale(0.95); }
+      100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    }
+    .disc-icon {
+      position: fixed;
+      right: 32px;
+      top: 32px;
+      width: 32px;
+      height: 32px;
+      z-index: 99;
+      cursor: pointer;
+      user-select: none;
+      transition: filter 0.2s;
+      filter: brightness(0) invert(1);
+    }
+    .disc-icon.paused {
+      filter: grayscale(60%) brightness(0.7);
+    }
+    @keyframes disc-rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .disc-icon.playing {
+      animation: disc-rotate 3s linear infinite;
+    }
+    #blackScreen {
+      display: none;
+      position: fixed;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      background: #000;
+      z-index: 200;
+      pointer-events: none;
+      opacity: 0;
+      border-radius: 50%;
+      filter: blur(60px);
+      transition:
+        opacity 6s linear,
+        border-radius 6s cubic-bezier(.7,1.7,.5,1),
+        filter 6s cubic-bezier(.7,1.7,.5,1);
+    }
+    #dreamDialogue {
+      position: fixed;
+      left: 24px;
+      right: 24px;
+      bottom: 40px;
+      height: 160px;
+      background: rgba(35, 26, 54, 0.9);
+      border: 3px solid #FBAFFF;
+      border-radius: 16px;
+      box-shadow: 0 4px 22px 4px rgba(249, 210, 255, 0.8);
+      padding: 24px;
+      z-index: 30;
+      color: #E993FF;
+      font-size: 1.0rem;
+      font-family: 'Pixelify Sans', 'Pixel-CN';
+      letter-spacing: 0.04em;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      }
+      #dreamDialogue.expanded {
+      height: 400px; /* 展开后的高度，可根据需求调整 */
+    }
+
+      #dreamDialogue .dialogue-content {
+      width: auto;
+      max-width: 100%; /* 最大宽度 = 容器宽度 - 24px */
+      height: 128px;
+      /*max-height:calc(100% - 32px); */
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      position: relative;
+      overflow-y: auto; /* 添加垂直滚动条 */
+      white-space: pre-wrap;
+  }
+    #dreamDialogue.expanded .dialogue-content {
+      height: 364px;
+    }
+  /* 自定义滚动条（WebKit浏览器） */
+    #dreamDialogue .dialogue-content::-webkit-scrollbar {
+      width: 8px;
+      right: 0;
+    }
+
+    #dreamDialogue .dialogue-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #dreamDialogue .dialogue-content::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 200, 255, 0.8);
+      border-radius: 8px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    #dreamDialogue .dialogue-content::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(255, 160, 255, 1);
+    }
+
+    /* Firefox 支持 */
+    #dreamDialogue .dialogue-content {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 200, 255, 0.8) transparent;
+    }
+    #dreamDialogue .ask-btn {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      height: 24px;
+      margin-top: 12px;
+      color: #fff;
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 0;
+      border-radius: 8px;
+      transition: background 0.2s;
+      align-self: flex-start;
+    }
+    #dreamDialogue .expand-btn {
+      position: absolute;
+      top: -16px;
+      left: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background-color: #E993FF;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+
+      cursor: pointer;
+      transition: background-color 0.2s, box-shadow 0.2s;
+    }
+    #dreamDialogue .expand-btn:hover {
+      background-color: #d678f0;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    #dreamDialogue .expand-btn img {
+      width: 16px;
+      height: 16px;
+      pointer-events: none;
+    }
+    #dreamInputArea {
+      position: fixed;
+      left: 24px;
+      right: 24px;
+      bottom: 40px;
+      height: 160px;
+      background: rgba(35,26,54,0.9);
+      border: none;
+      border-radius: 16px;
+      box-shadow: none;
+      padding-top: 24px;
+      padding-bottom: 12px;
+      padding-left: 24px;
+      padding-right: 24px;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+
+    }
+    #dreamInput {
+      width: 100%;
+      max-width: 100%; /* 最大宽度 = 父容器宽度 - padding×2 */
+      height: auto;
+      max-height:124px; /* 超过容器高度时显示滚动条 */
+      resize: none; /* 禁止拖动 */
+      font-size: 1.1rem;
+      font-family: 'Pixelify Sans','Pixel-CN';
+      padding: 0;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: #E993FF;
+      overflow-y: auto;
+      box-sizing: border-box;
+      line-height: 1.5;
+      /* 👇这两行确保文字自动换行 */
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    #dreamInput::placeholder {
+      color: rgba(233,147,255,0.4);
+      font-family: 'Pixelify Sans', sans-serif;
+    }
+    #dreamSendBtn {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      height: 24px;
+      font-size: 1.1rem;
+      font-family: 'Pixelify Sans', sans-serif;
+      padding: 0;
+      border-radius: 8px;
+      border: none;
+      background: none;
+      color: #fff;
+      cursor: pointer;
+      align-self: flex-start;
+    }
+    #dreamInput::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #dreamInput::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #dreamInput::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 200, 255, 0.8);
+      border-radius: 8px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    #dreamInput::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(255, 160, 255, 1);
+    }
+
+    /* Firefox 支持 */
+    #dreamInput {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 200, 255, 0.8) transparent;
+    }
+  </style>
+</head>
+<body>
+  <button id="startBtn" style="z-index:10;font-size:3.1rem;padding:1em 2.5em;cursor:pointer;color:#CA8758;background:none;border:none;font-family:'Gabriola', 'Gabriola Regular', serif;font-weight:400;letter-spacing:40%;">Click to enter</button>
+  <div id="container">
+    <img id="frame" src="/images/0001.png" draggable="false" />
+  </div>
+  <div class="dialogue-box" id="dialogueBox" style="display:none;">
+    <div class="dialogue-title" id="dialogueTitle">Title String</div>
+    <img class="dialog-bg" src="/Dialog.png" alt="dialog-bg">
+    
+    <div class="dialogue-text" id="dialogueText"></div>
+  </div>
+  <div id="scrollTip" style="display:none;position:fixed;left:0;top:0;z-index:99;font-family:'Pixelify Sans',sans-serif;font-size:1.0rem;color:#fff2d5;text-shadow:0 2px 8px #000b;pointer-events:none;">Scroll to forward</div>
+  <audio id="audio1" src="/audio/door-opening2.mp3"></audio>
+  <audio id="audio2" src="/audio/bgm.mp3" loop></audio>
+  <audio id="audio3" src="/audio/rabbit.mp3"></audio>
+  <audio id="audio4" src="/audio/placeholder.mp3"></audio>
+  <audio id="sitdownAudio" src="/audio/sitdown.mp3"></audio>
+  <img src="/唱片.svg" id="discIcon" class="disc-icon paused" alt="bgm-disc" />
+  <div id="blackScreen" style="display:none;position:fixed;left:0;top:0;width:100vw;height:100vh;background:#000;z-index:200;pointer-events:none;"></div>
+  <div id="chatArea" style="display:none;position:fixed;left:0;bottom:0;width:100vw;z-index:30;justify-content:center;align-items:flex-end;padding:0 0 32px 0;">
+    <div style="background:rgba(34,34,34,0.95);border-radius:16px;padding:24px 32px 24px 110px;min-width:340px;max-width:600px;display:flex;align-items:center;box-shadow:0 4px 24px #000b;">
+      <input id="chatInput" type="text" placeholder="请输入..." ;" />
+      <button id="sendBtn" style="font-size:1.1rem;padding:8px 18px;border-radius:8px;border:none;background:#285085;color:#fff;cursor:pointer;">Send</button>
+    </div>
+  </div>
+  <div id="dreamDialogue" style="display: none;">
+    <button class="expand-btn" id="expandBtn">
+      <img id="expandIcon" src="/expand.png" alt="Expand" />
+    </button>
+    <div class="dialogue-content" id="dialogueContent">
+     
+      <span id="dreamContent" style="color:#E993FF;"></span>
+    </div>
+    <button class="ask-btn">Ask</button>
+  </div>
+  <div id="dreamInputArea" style="display: none;">
+    <textarea id="dreamInput" placeholder="Describe your dream" autocomplete="off"wrap="soft"></textarea>
+    
+    <button id="dreamSendBtn">Send</button>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    // 配置
+    const totalFrames = 470;
+    const framePad = 4;
+    const framePrefix = 'images/';
+    const frameExt = '.png';
+    // 阶段帧
+    const autoStart = 1, autoEnd = 46;
+    const scrollStart = 46, scrollEnd = 145;
+    const dialogueFrame = 145;
+    // 工具函数
+    function pad(num, size) {
+      let s = "0000" + num;
+      return s.substr(s.length - size);
+    }
+    // 预加载图片
+    const images = [];
+    for (let i = 1; i <= totalFrames; i++) {
+      const img = new Image();
+      img.src = `${framePrefix}${pad(i, framePad)}${frameExt}`;
+      images.push(img);
+    }
+    // 状态变量
+    let currentFrame = 1;
+    let targetFrame = 1;
+    let animating = false;
+    let canScroll = false;
+    let dialogueShown = false;
+    let dialogueEverClosed = false;
+    let showScrollTip = false;
+    let hasScrolled = false;
+    const frameImg = document.getElementById('frame');
+    const startBtn = document.getElementById('startBtn');
+    const dialogueBox = document.getElementById('dialogueBox');
+    const dialogueText = document.getElementById('dialogueText');
+    const dialogueContent = 'Welocme.She has waited for you for quite a while.';
+    const scrollTip = document.getElementById('scrollTip');
+    // 自动播放函数
+    function autoPlayFrames(from, to, cb) {
+      gsap.to({frame: from}, {
+        frame: to,
+        duration: (to-from)*0.04, // 速度可调
+        ease: "none",
+        onUpdate: function() {
+          const f = Math.round(this.targets()[0].frame);
+          if (f !== currentFrame) {
+            currentFrame = f;
+            frameImg.src = `${framePrefix}${pad(currentFrame, framePad)}${frameExt}`;
+          }
+        },
+        onComplete: function() {
+          currentFrame = to;
+          frameImg.src = `${framePrefix}${pad(currentFrame, framePad)}${frameExt}`;
+          // 第一段自动播放结束后，显示tooltip
+          if (from === autoStart && to === autoEnd) {
+            showScrollTip = true;
+            hasScrolled = false; // 重置，允许再次显示并响应滑动
+          }
+          // 第二段自动播放结束后，显示tooltip
+          if (from === dialogueFrame && to === 235) {
+            showScrollTip = true;
+            hasScrolled = false; // 重置，允许再次显示并响应滑动
+          }
+          if(cb) cb();
+        }
+      });
+    }
+    // 滚轮事件
+    function onWheel(e) {
+      if (!canScroll || dialogueShown) return;
+      e.preventDefault();
+      let delta = e.deltaY;
+      let step = 30; // 每次滚动跳40帧
+      if (delta > 0) {
+        targetFrame = Math.min(scrollEnd, currentFrame + step);
+      } else {
+        targetFrame = Math.max(scrollStart, currentFrame - step);
+      }
+      animateToFrame(targetFrame);
+      // 新增：第一次滚动后隐藏scrollTip且不再显示
+      if (!hasScrolled) {
+        hasScrolled = true;
+        showScrollTip = false;
+        scrollTip.style.display = 'none';
+      }
+    }
+    // 鼠标跟随提示逻辑
+    function updateScrollTip(e) {
+      if (showScrollTip && !hasScrolled) {
+        scrollTip.style.display = 'block';
+        scrollTip.style.left = (e.clientX + 20) + 'px';
+        scrollTip.style.top = (e.clientY + 20) + 'px';
+      } else {
+        scrollTip.style.display = 'none';
+      }
+    }
+    window.addEventListener('mousemove', updateScrollTip);
+    // 动画切换帧
+    function animateToFrame(newFrame) {
+      if (animating) return;
+      animating = true;
+      gsap.to({frame: currentFrame}, {
+        frame: newFrame,
+        duration: 0.5,
+        ease: "power2.out",
+        onUpdate: function() {
+          const f = Math.round(this.targets()[0].frame);
+          if (f !== currentFrame) {
+            currentFrame = f;
+            frameImg.src = `${framePrefix}${pad(currentFrame, framePad)}${frameExt}`;
+            // 检查是否到达对话帧
+            if (currentFrame === dialogueFrame && !dialogueShown && !dialogueEverClosed) {
+              showDialogueBox(undefined, 'Rabbit.png', 'Mr. Rabbit');
+            }
+            // 检查是否到达最后一帧
+            if (currentFrame === totalFrames && !dialogueShown) {
+              showDialogueBox('Ah, there you are', 'AI.png', 'AI');
+            }
+          }
+        },
+        onComplete: function() {
+          currentFrame = newFrame;
+          animating = false;
+          // 检查是否到达对话帧
+          if (currentFrame === dialogueFrame && !dialogueShown && !dialogueEverClosed) {
+            showDialogueBox(undefined, 'Rabbit.png', 'Title String');
+          }
+          // 检查是否到达最后一帧
+          if (currentFrame === totalFrames && !dialogueShown) {
+            showDialogueBox('Ah, there you are', 'AI.png', 'Title String');
+          }
+        }
+      });
+    }
+    // 对话框打字机效果
+    function showDialogueBox(text, avatar, title) {
+      showScrollTip = false; // 弹出对话框时隐藏tooltip
+      scrollTip.style.display = 'none'; // 立即隐藏tooltip，防止滞后
+      dialogueShown = true;
+      canScroll = false;
+      dialogueBox.style.display = 'flex';
+      dialogueBox.style.flexDirection = 'column';
+      dialogueBox.style.alignItems = 'flex-start';
+      setTimeout(typeWriter, 60 + Math.random()*20);
+
+      // 判断对话框类型，播放不同音频
+      if (title === 'Mr. Rabbit') {
+        const audio3 = document.getElementById('audio3');
+        if(audio3) {
+          audio3.currentTime = 0;
+          audio3.play();
+        }
+        // 只在文字完全展示后允许滚轮关闭
+        function closeOnWheel(e) {
+          if(typeWriterFinished) {
+            pauseRabbitAudio();
+            hideDialogueBox();
+            window.removeEventListener('wheel', closeOnWheel, {passive: false});
+          }
+        }
+        window.addEventListener('wheel', closeOnWheel, {passive: false});
+        // 禁用点击关闭
+        dialogueBox.onclick = null;
+      } else if (title === 'AI') {
+        const audio4 = document.getElementById('audio4');
+        if(audio4) {
+          audio4.currentTime = 0;
+          audio4.play();
+        }
+        dialogueBox.onclick = null;
+      } else {
+        // 默认音效
+        const audio1 = document.getElementById('audio1');
+        if(audio1) {
+          audio1.currentTime = 0;
+          audio1.play();
+        }
+        dialogueBox.onclick = null;
+      }
+      let content = typeof text === 'string' ? text : dialogueContent;
+      dialogueText.textContent = '';
+      // 设置头像
+      const avatarImg = document.getElementById('avatarImg');
+      if (avatarImg) {
+        avatarImg.src = avatar || 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
+      }
+      // 设置标题
+      const dialogueTitle = document.getElementById('dialogueTitle');
+      if (dialogueTitle) {
+        dialogueTitle.textContent = typeof title === 'string' ? title : '';
+        dialogueTitle.style.display = title ? 'block' : 'none';
+      }
+      let i = 0;
+      let typeWriterFinished = false;
+      function typeWriter() {
+        if (i <= content.length) {
+          dialogueText.textContent = content.slice(0, i);
+          i++;
+          setTimeout(typeWriter, 60 + Math.random()*40);
+        } else {
+          typeWriterFinished = true;
+        }
+      }
+      typeWriter();
+      const aiDefault = 'You ask me everything about dreams.'
+      // AI弹窗内容完整后，黑屏动效2s，四角圆形向中间蔓延并模糊
+      if(title === 'AI') {
+        setTimeout(()=>{
+          const blackScreen = document.getElementById('blackScreen');
+          blackScreen.style.display = 'block';
+          blackScreen.style.opacity = '0';
+          blackScreen.style.borderRadius = '50%';
+          blackScreen.style.filter = 'blur(60px)';
+          void blackScreen.offsetWidth;
+          blackScreen.style.transition =
+            'opacity 2s linear, border-radius 2s cubic-bezier(.7,1.7,.5,1), filter 2s cubic-bezier(.7,1.7,.5,1)';
+          blackScreen.style.opacity = '1';
+          blackScreen.style.borderRadius = '0';
+          blackScreen.style.filter = 'blur(0)';
+          // 播放sitdown音频
+          const sitdownAudio = document.getElementById('sitdownAudio');
+          if(sitdownAudio) { sitdownAudio.currentTime = 0; sitdownAudio.play(); }
+          setTimeout(()=>{
+            // 切换图片前，确保AI对话框彻底关闭
+            const dreamDialogue = document.getElementById('dreamDialogue');
+            const dialogueBox = document.getElementById('dialogueBox');
+            if(dialogueBox) dialogueBox.style.display = 'none';
+            if (dreamDialogue) {
+          dreamDialogue.style.display = 'flex';
+          document.getElementById('dialogueContent').textContent = aiDefault;
+        }
+        frameImg.src = '/talkroom/002.png';
+        // ✅ 循环播放 /talkingroom/002.png 到 /talkingroom/003.png
+            let current = 2;
+            const max = 3;
+            const interval = setInterval(() => {
+              frameImg.src = `/talkroom/00${current}.png`;
+              current++;
+              if (current > max) current = 2;
+            }, 2000); // 每 500ms 切换一次图片
+            blackScreen.style.opacity = '0';
+            setTimeout(()=>{blackScreen.style.display = 'none';},400);
+          },2000);
+        }, 300);
+      }
+    }
+    // 关闭对话框
+    function hideDialogueBox() {
+      dialogueBox.style.display = 'none';
+      dialogueShown = false;
+      dialogueEverClosed = true;
+      canScroll = false;
+      // 关闭对话框1时暂停rabbit音频
+      const audio3 = document.getElementById('audio3');
+      if(audio3 && !audio3.paused) audio3.pause();
+      // 自动播放到235帧
+      autoPlayFrames(dialogueFrame, 235, function() {
+        canScroll = true;
+        currentFrame = 235;
+        targetFrame = 235;
+        window.removeEventListener('wheel', onWheel, {passive: false});
+        window.addEventListener('wheel', onFinalWheel, {passive: false});
+      });
+    }
+    // 对话后滚轮控制（235~470）
+    function onFinalWheel(e) {
+      if (dialogueShown) return;
+      e.preventDefault();
+      let delta = e.deltaY;
+      let step = 40; // 每次滚动跳10帧
+      if (delta > 0) {
+        targetFrame = Math.min(totalFrames, currentFrame + step);
+      } else {
+        targetFrame = Math.max(235, currentFrame - step);
+      }
+      animateToFrame(targetFrame);
+      // 新增：第二段滚动第一次后隐藏scrollTip且不再显示
+      if (!hasScrolled) {
+        hasScrolled = true;
+        showScrollTip = false;
+        scrollTip.style.display = 'none';
+      }
+    }
+    // 监听点击关闭对话框
+    function pauseRabbitAudio() {
+      const audio3 = document.getElementById('audio3');
+      if(audio3 && !audio3.paused) audio3.pause();
+    }
+    // 进入按钮逻辑
+    startBtn.addEventListener('click', function() {
+      startBtn.style.display = 'none';
+      const audio1 = document.getElementById('audio1');
+      const audio2 = document.getElementById('audio2');
+      audio1.currentTime = 0;
+      audio2.currentTime = 0;
+      audio1.play();
+      // 立即开始动画
+      autoPlayFrames(autoStart, autoEnd, function() {
+        canScroll = true;
+        currentFrame = autoEnd;
+        targetFrame = autoEnd;
+        window.addEventListener('wheel', onWheel, {passive: false});
+      });
+      // 音频2依然在音频1结束后播放
+      audio1.onended = function() {
+        audio2.volume = 0;
+        audio2.play();
+        gsap.to(audio2, {
+          volume: 1,
+          duration: 2,
+          ease: "power1.in"
+        });
+      }
+    });
+    // 初始化
+    frameImg.ondragstart = () => false;
+    // 页面加载时只显示第一帧
+    frameImg.src = `${framePrefix}${pad(1, framePad)}${frameExt}`;
+    // 保证对话框高度等于图片高度
+    function syncDialogHeight() {
+      const dialogBox = document.getElementById('dialogueBox');
+      const dialogBg = document.querySelector('.dialog-bg');
+      if (dialogBg && dialogBox) {
+        dialogBox.style.width = dialogBg.naturalWidth + 'px';
+        dialogBox.style.height = dialogBg.naturalHeight + 'px';
+      }
+    }
+    // 页面加载和图片加载后同步高度
+    window.addEventListener('load', syncDialogHeight);
+    document.querySelector('.dialog-bg').addEventListener('load', syncDialogHeight);
+    // 唱片旋转与BGM控制
+    const discIcon = document.getElementById('discIcon');
+    const audio2 = document.getElementById('audio2');
+    function updateDiscState() {
+      if (audio2.paused) {
+        discIcon.classList.remove('playing');
+        discIcon.classList.add('paused');
+      } else {
+        discIcon.classList.add('playing');
+        discIcon.classList.remove('paused');
+      }
+    }
+    discIcon.addEventListener('click', function() {
+      if (audio2.paused) {
+        audio2.play();
+      } else {
+        audio2.pause();
+      }
+    });
+    audio2.addEventListener('play', updateDiscState);
+    audio2.addEventListener('pause', updateDiscState);
+    // 页面初始化时同步一次
+    updateDiscState();
+    /* 1. 保证点击icon不影响对话框关闭 */
+    discIcon.addEventListener('mousedown', function(e) {
+      e.stopPropagation(); // 阻止冒泡，防止触发全局mousedown
+    });
+    const askBtn = document.querySelector('#dreamDialogue .ask-btn');
+    window.addEventListener('DOMContentLoaded', function () {
+    // ✅ 此时 DOM 已加载，虽然元素隐藏，但我们能成功获取引用并绑定事件
+    const input = document.getElementById('dreamInput');
+    const content = document.getElementById('dialogueContent');
+    const sendBtn = document.getElementById('dreamSendBtn');
+    const dialogue = document.getElementById('dreamDialogue');
+    const inputArea = document.getElementById('dreamInputArea');
+    //const askBtn = document.querySelector('#dreamDialogue .ask-btn');
+    const minHeight = 24; // ✅ 默认一行高度（可以根据字体适当调整）
+    const maxHeight = 124;
+
+    function adjustHeight() {
+      input.style.height = 'auto';
+      const scrollHeight = input.scrollHeight;
+      input.style.overflowY = scrollHeight > maxHeight ? 'auto' : 'hidden';
+      input.style.height = Math.max(minHeight, Math.min(scrollHeight, maxHeight)) + 'px';
+    }
+
+    window.showInputArea = function () {
+      input.value = '';
+      adjustHeight();
+      inputArea.style.display = 'flex';
+      setTimeout(() => input.focus(), 0);
+    }
+
+    window.showDreamDialogue = function (text) {
+      dialogue.style.display = 'flex';
+      content.textContent = text ?? aiDefault;;  // 或使用 innerHTML 支持富文本
+    };
+    
+    const expandBtn = document.getElementById('expandBtn');
+    const expandIcon = document.getElementById('expandIcon');
+
+    expandBtn.addEventListener('click', () => {
+      const isExpanded = dialogue.classList.toggle('expanded');
+      
+
+      // 切换图标路径
+      expandIcon.src = isExpanded
+        ? '/collapse.png'  // 收起图标
+        : '/expand.png';   // 展开图标
+
+      expandIcon.alt = isExpanded ? 'Collapse' : 'Expand';
+    });
+
+    if (askBtn) {
+      askBtn.addEventListener('click', () => {
+        dialogue.style.display = 'none';
+        
+        showInputArea();
+      });
+    }
+
+    input.addEventListener('input', adjustHeight);
+    adjustHeight();
+
+    function handleSubmit() {
+    const question = input.value.trim();
+    console.log('handleSubmit 被触发，输入内容：', question); // 增加这一行
+    if (!question) return;
+    inputArea.style.display = 'none';
+    showDreamDialogue('……'); // 显示“思考中”
+    sendToAI(question);
+    }
+  
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.ctrlKey) {
+      e.preventDefault();
+      handleSubmit();
+    } else if (e.key === 'Enter' && e.ctrlKey) {
+      input.setRangeText('\n', input.selectionStart, input.selectionEnd, 'end');
+      adjustHeight();
+      e.preventDefault();
+    }
+  });
+
+  sendBtn.addEventListener('click', handleSubmit);
+
+});
+
+async function typeText(el, text) {
+  el.textContent = "";
+  for (let i = 0; i < text.length; i++) {
+    el.textContent += text[i];
+    await new Promise(resolve => setTimeout(resolve, 30));
+  }
+}
+
+async function sendToAI(question) {
+  const content = document.getElementById('dialogueContent');
+
+  if (!question.trim()) {
+    content.textContent = "Please tell me your dream.";
+    return;
+  }
+
+  content.textContent = `My thoughts are crossing dimensions to reach you …`; // loading
+  askBtn.style.display = 'none';
+  
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: "12",
+        content: question,
+      })
+    });
+
+    console.log('sendToAI 发送内容：', question);
+    const data = await res.json();
+    const responseText = data.answer || "AI 暂时无法回答你的问题。";
+    content.textContent = responseText;
+    await typeText(content, responseText);
+    askBtn.style.display = 'flex';
+
+  } catch (err) {
+    console.error("sendToAI 出错：", err);
+    content.textContent = "出错了：" + (err.message || "未知错误");
+  }
+}
+    
+
+
+  </script>
+</body>
+</html>
