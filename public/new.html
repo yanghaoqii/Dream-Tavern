@@ -387,21 +387,21 @@
 <body>
   <button id="startBtn" style="z-index:10;font-size:3.1rem;padding:1em 2.5em;cursor:pointer;color:#CA8758;background:none;border:none;font-family:'Gabriola', 'Gabriola Regular', serif;font-weight:400;letter-spacing:40%;">Click to enter</button>
   <div id="container">
-    <img id="frame" src="/images/0001.png" draggable="false" />
+    <img id="frame" src="images/0001.png" draggable="false" />
   </div>
   <div class="dialogue-box" id="dialogueBox" style="display:none;">
     <div class="dialogue-title" id="dialogueTitle">Title String</div>
-    <img class="dialog-bg" src="/Dialog.png" alt="dialog-bg">
+    <img class="dialog-bg" src="Dialog.png" alt="dialog-bg">
     
     <div class="dialogue-text" id="dialogueText"></div>
   </div>
   <div id="scrollTip" style="display:none;position:fixed;left:0;top:0;z-index:99;font-family:'Pixelify Sans',sans-serif;font-size:1.0rem;color:#fff2d5;text-shadow:0 2px 8px #000b;pointer-events:none;">Scroll to forward</div>
-  <audio id="audio1" src="/audio/door-opening2.mp3"></audio>
-  <audio id="audio2" src="/audio/bgm.mp3" loop></audio>
-  <audio id="audio3" src="/audio/rabbit.mp3"></audio>
-  <audio id="audio4" src="/audio/placeholder.mp3"></audio>
-  <audio id="sitdownAudio" src="/audio/sitdown.mp3"></audio>
-  <img src="/唱片.svg" id="discIcon" class="disc-icon paused" alt="bgm-disc" />
+  <audio id="audio1" src="audio/door-opening2.mp3"></audio>
+  <audio id="audio2" src="audio/bgm.mp3" loop></audio>
+  <audio id="audio3" src="audio/rabbit.mp3"></audio>
+  <audio id="audio4" src="audio/placeholder.mp3"></audio>
+  <audio id="sitdownAudio" src="audio/sitdown.mp3"></audio>
+  <img src="唱片.svg" id="discIcon" class="disc-icon paused" alt="bgm-disc" />
   <div id="blackScreen" style="display:none;position:fixed;left:0;top:0;width:100vw;height:100vh;background:#000;z-index:200;pointer-events:none;"></div>
   <div id="chatArea" style="display:none;position:fixed;left:0;bottom:0;width:100vw;z-index:30;justify-content:center;align-items:flex-end;padding:0 0 32px 0;">
     <div style="background:rgba(34,34,34,0.95);border-radius:16px;padding:24px 32px 24px 110px;min-width:340px;max-width:600px;display:flex;align-items:center;box-shadow:0 4px 24px #000b;">
@@ -411,7 +411,7 @@
   </div>
   <div id="dreamDialogue" style="display: none;">
     <button class="expand-btn" id="expandBtn">
-      <img id="expandIcon" src="/expand.png" alt="Expand" />
+      <img id="expandIcon" src="expand.png" alt="Expand" />
     </button>
     <div class="dialogue-content" id="dialogueContent">
      
@@ -656,12 +656,12 @@
           dreamDialogue.style.display = 'flex';
           document.getElementById('dialogueContent').textContent = aiDefault;
         }
-        frameImg.src = '/talkroom/002.png';
+        frameImg.src = 'talkroom/002.png';
         // ✅ 循环播放 /talkingroom/002.png 到 /talkingroom/003.png
             let current = 2;
             const max = 3;
             const interval = setInterval(() => {
-              frameImg.src = `/talkroom/00${current}.png`;
+              frameImg.src = `talkroom/00${current}.png`;
               current++;
               if (current > max) current = 2;
             }, 2000); // 每 500ms 切换一次图片
@@ -822,8 +822,8 @@
 
       // 切换图标路径
       expandIcon.src = isExpanded
-        ? '/collapse.png'  // 收起图标
-        : '/expand.png';   // 展开图标
+        ? 'collapse.png'  // 收起图标
+        : 'expand.png';   // 展开图标
 
       expandIcon.alt = isExpanded ? 'Collapse' : 'Expand';
     });
