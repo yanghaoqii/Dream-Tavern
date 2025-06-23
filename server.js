@@ -8,7 +8,9 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '1y'  // 设置浏览器缓存时间为 1 年，提高加载性能
+}));
 
 // === Coze 配置 ===
 const COZE_API_TOKEN = "pat_U2bQqBUmIocUfPT8NrmJ9xU7VPIcDQUgyn52BjAVKOfWdgLkqnWbaZlSJ7o9hObL";
