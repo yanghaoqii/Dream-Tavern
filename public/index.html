@@ -148,6 +148,27 @@
       0% { opacity: 0; transform: translateX(-50%) translateY(40px) scale(0.95); }
       100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
     }
+    .top-bar {
+      position: fixed;
+      top: 32px;
+      left: 32px;
+      right: 32px;
+      height: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 99;
+      pointer-events: none; /* 整体不接收点击事件 */
+    }
+
+    .logo-text {
+      font-family: 'Pixelify Sans', sans-serif;
+      font-size: 24px;
+      color: #B79476;
+      line-height: 1;
+      pointer-events: auto; /* 可点击 */
+      user-select: none;
+    }
     .disc-icon {
       position: fixed;
       right: 32px;
@@ -159,6 +180,7 @@
       user-select: none;
       transition: filter 0.2s;
       filter: brightness(0) invert(1);
+      pointer-events: auto; 
     }
     .disc-icon.paused {
       filter: grayscale(60%) brightness(0.7);
@@ -401,7 +423,10 @@
   <audio id="audio3" src="audio/rabbit.mp3"></audio>
   <audio id="audio4" src="audio/placeholder.mp3"></audio>
   <audio id="sitdownAudio" src="audio/sitdown.mp3"></audio>
-  <img src="唱片.svg" id="discIcon" class="disc-icon paused" alt="bgm-disc" />
+  <div class="top-bar">
+    <div class="logo-text">Dream Tavern</div>
+    <img src="唱片.svg" id="discIcon" class="disc-icon paused" alt="bgm-disc" />
+  </div>
   <div id="blackScreen" style="display:none;position:fixed;left:0;top:0;width:100vw;height:100vh;background:#000;z-index:200;pointer-events:none;"></div>
   <div id="chatArea" style="display:none;position:fixed;left:0;bottom:0;width:100vw;z-index:30;justify-content:center;align-items:flex-end;padding:0 0 32px 0;">
     <div style="background:rgba(34,34,34,0.95);border-radius:16px;padding:24px 32px 24px 110px;min-width:340px;max-width:600px;display:flex;align-items:center;box-shadow:0 4px 24px #000b;">
