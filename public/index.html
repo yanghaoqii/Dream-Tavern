@@ -1,5 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+<!-- ===== Loading Screen  ===== -->
+<div id="loadingScreen"
+     style="
+       position:fixed;top:0;left:0;width:100%;height:100%;
+       background:#000;display:flex;flex-direction:column;
+       justify-content:center;align-items:center;z-index:9999;
+       color:#E993FF;font-family:'Pixelify Sans',sans-serif;">
+  <p style="margin:0;font-size:1.2rem">Loading <span id="progressText">0%</span></p>
+
+  <div style="width:60%;height:10px;background:#333;margin-top:12px;border-radius:6px;overflow:hidden">
+    <div id="progressFill"
+         style="width:0;height:100%;background:#E993FF;transition:width .2s"></div>
+  </div>
+</div>
 <head>
   <meta charset="UTF-8">
   <title>Dream Tavern</title>
@@ -451,6 +465,68 @@
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script>
+    <!-- ===== 预加载脚本 ===== -->
+    (() => {
+      /* ------------ ① 配置你要预加载的资源 --------------- */
+      const totalFrames = 470;                 // 帧图数量 0001.png ~ 0470.png
+      const extraImages = [                    // 其他单张图片
+        'Dialog.png', '唱片.svg', 'expand.png', 'collapse.png'
+      ];
+      const audios = [                         // 预加载音频
+        'bgm.mp3', 'door-opening2.mp3', 'rabbit.mp3', 'sitdown.mp3'
+      ];
+      /* ------------ ② 生成资源清单 ----------------------- */
+      const imgList = [];
+      for (let i = 1; i <= totalFrames; i++) {
+        const file = String(i).padStart(4, '0') + '.png';
+        imgList.push('images/' + file);
+      }
+      extraImages.forEach(f => imgList.push(f.startsWith('images/') ? f : 'images/' + f));
+      const audioList = audios.map(f => 'audio/' + f);
+    
+      const resources = [...imgList, ...audioList];
+      const total = resources.length;
+      let loaded = 0;
+    
+      /* ------------ ③ 更新进度条 ------------------------ */
+      const updateProgress = () => {
+        loaded++;
+        const percent = Math.min(100, Math.floor((loaded / total) * 100));
+        document.getElementById('progressFill').style.width = percent + '%';
+        document.getElementById('progressText').textContent = percent + '%';
+        if (loaded === total) finishLoading();
+      };
+    
+      /* ------------ ④ 预加载函数 ------------------------ */
+      const preload = src => {
+        if (src.endsWith('.png') || src.endsWith('.svg')) {
+          const img = new Image();
+          img.onload = updateProgress;
+          img.onerror = updateProgress;
+          img.src = src;
+        } else { // audio
+          const audio = new Audio();
+          audio.oncanplaythrough = updateProgress;
+          audio.onerror = updateProgress;
+          audio.src = src;
+        }
+      };
+    
+      /* ------------ ⑤ 完成后移除遮罩 -------------------- */
+      const finishLoading = () => {
+        const screen = document.getElementById('loadingScreen');
+        screen.style.opacity = '0';
+        setTimeout(() => screen.remove(), 400);   // 动画 0.4s
+        /* ✨ 这里触发你原来的启动逻辑（若需要） */
+        // initYourScene();  // 例如开始播放帧动画 / 音乐
+      };
+    
+      /* ------------ ⑥ 开始预加载 ------------------------ */
+      window.addEventListener('DOMContentLoaded', () => {
+        resources.forEach(preload);
+      });
+    })();
+
     // 配置
     const totalFrames = 470;
     const framePad = 4;
