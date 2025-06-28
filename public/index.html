@@ -678,6 +678,14 @@
           audio3.currentTime = 0;
           audio3.play();
         }
+          /* ✨ 新增：音频结束后出现 ScrollTip */
+         audio3.onended = () => {
+           showScrollTip = true;      // 允许显示
+           hasScrolled   = false;     // 标记“尚未滚动”
+           // 立即把提示显示出来（鼠标不动也能看到）
+           scrollTip.style.display = 'block';
+         };
+       }
         // 只在文字完全展示后允许滚轮关闭
         function closeOnWheel(e) {
           if(typeWriterFinished) {
